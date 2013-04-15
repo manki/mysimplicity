@@ -17,15 +17,15 @@
 
         {
         "type": "font",
-        "defName": "FONT_SCADA_21",
-        "file": "fonts/Scada-Regular.ttf"
+        "defName": "FONT_PT_SANS_21",
+        "file": "fonts/PT_Sans-Web-Regular.ttf"
         },
 
         {
           "type": "font",
-          "characterRegex": "[AMP]",
-          "defName": "FONT_SCADA_SUBSET_16",
-          "file": "fonts/Scada-Regular.ttf"
+          "characterRegex": "[IND :0-9AMP]",
+          "defName": "FONT_PT_SANS_BOLD_SUBSET_18",
+          "file": "fonts/PT_Sans-Web-Bold.ttf"
         }
 
  ]

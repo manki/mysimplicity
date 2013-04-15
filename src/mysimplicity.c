@@ -16,7 +16,7 @@ Window window;
 
 TextLayer text_date_layer;
 TextLayer text_time_layer;
-TextLayer text_ampm_layer;
+TextLayer text_india_time_layer;
 
 Layer line_layer;
 
@@ -28,7 +28,6 @@ void line_layer_update_callback(Layer *me, GContext* ctx) {
 
   graphics_draw_line(ctx, GPoint(8, 97), GPoint(131, 97));
   graphics_draw_line(ctx, GPoint(8, 98), GPoint(131, 98));
-
 }
 
 
@@ -40,26 +39,44 @@ void init_text_layer(TextLayer* text_layer, uint32_t font_resource_id) {
 }
 
 
+PblTm add_time(const PblTm* time, unsigned int hours, unsigned int minutes) {
+  PblTm result = *time;
+
+  int result_minutes = minutes + time->tm_min;
+  if (result_minutes >= 60) {
+    result_minutes = result_minutes - 60;
+    hours++;
+  }
+  result.tm_min = result_minutes;
+
+  int result_hours = hours + time->tm_hour;
+  if (result_hours >= 24) {
+    result_hours = result_hours - 24;
+  }
+  result.tm_hour = result_hours;
+
+  return result;
+}
+
+
 void show_time(const PblTm* time) {
   // Need to be static because they're used by the system later.
-  static char time_text[] = "00:00";
   static char date_text[] = "Xxx, Xxx 00";
   static char last_date_text[] = "Xxx, Xxx 00";
-
-  char *time_format;
-
   string_format_time(date_text, sizeof(date_text), "%a, %b %e", time);
   if (strncmp(last_date_text, date_text, sizeof(date_text))) {
     text_layer_set_text(&text_date_layer, date_text);
     strncpy(last_date_text, date_text, sizeof(date_text));
   }
 
+  const char *time_format;
   if (clock_is_24h_style()) {
     time_format = "%R";
   } else {
     time_format = "%I:%M";
   }
 
+  static char time_text[] = "00:00";
   string_format_time(time_text, sizeof(time_text), time_format, time);
 
   // Kludge to handle lack of non-padded hour format string
@@ -70,11 +87,11 @@ void show_time(const PblTm* time) {
 
   text_layer_set_text(&text_time_layer, time_text);
 
-  if (!clock_is_24h_style()) {
-    static char ampm_text[] = "XX";
-    string_format_time(ampm_text, sizeof(ampm_text), "%p", time);
-    text_layer_set_text(&text_ampm_layer, ampm_text);
-  }
+  static char india_time_text[] = "IND  XX:XX XX";
+  PblTm india_time = add_time(time, 12, 30);
+  string_format_time(
+      india_time_text, sizeof(india_time_text), "IND  %I:%M %p", &india_time);
+  text_layer_set_text(&text_india_time_layer, india_time_text);
 }
 
 
@@ -87,7 +104,7 @@ void handle_init(AppContextRef ctx) {
 
   resource_init_current_app(&APP_RESOURCES);
 
-  init_text_layer(&text_date_layer, RESOURCE_ID_FONT_SCADA_21);
+  init_text_layer(&text_date_layer, RESOURCE_ID_FONT_PT_SANS_21);
   layer_set_frame(&text_date_layer.layer, GRect(8, 68, 144-8, 168-68));
   layer_add_child(&window.layer, &text_date_layer.layer);
 
@@ -95,9 +112,9 @@ void handle_init(AppContextRef ctx) {
   layer_set_frame(&text_time_layer.layer, GRect(7, 92, 144-7, 168-92));
   layer_add_child(&window.layer, &text_time_layer.layer);
 
-  init_text_layer(&text_ampm_layer, RESOURCE_ID_FONT_SCADA_SUBSET_16);
-  layer_set_frame(&text_ampm_layer.layer, GRect(144-7-30, 124, 144-7, 168-89));
-  layer_add_child(&window.layer, &text_ampm_layer.layer);
+  init_text_layer(&text_india_time_layer, RESOURCE_ID_FONT_PT_SANS_BOLD_SUBSET_18);
+  layer_set_frame(&text_india_time_layer.layer, GRect(8, 8, 144-8, 25));
+  layer_add_child(&window.layer, &text_india_time_layer.layer);
 
   layer_init(&line_layer, window.layer.frame);
   line_layer.update_proc = &line_layer_update_callback;
