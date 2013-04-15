@@ -113,7 +113,7 @@ void handle_init(AppContextRef ctx) {
   layer_add_child(&window.layer, &text_time_layer.layer);
 
   init_text_layer(&text_india_time_layer, RESOURCE_ID_FONT_PT_SANS_BOLD_SUBSET_18);
-  layer_set_frame(&text_india_time_layer.layer, GRect(8, 8, 144-8, 25));
+  layer_set_frame(&text_india_time_layer.layer, GRect(14, 10, 144-14, 25));
   layer_add_child(&window.layer, &text_india_time_layer.layer);
 
   layer_init(&line_layer, window.layer.frame);
