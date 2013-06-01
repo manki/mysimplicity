@@ -59,6 +59,35 @@ PblTm add_time(const PblTm* time, unsigned int hours, unsigned int minutes) {
 }
 
 
+PblTm subtract_time(const PblTm* time, unsigned int hours, unsigned int minutes) {
+  PblTm result = *time;
+
+  int result_minutes = time->tm_min - minutes;
+  if (result_minutes < 0) {
+    result_minutes = 60 + result_minutes;
+    hours++;
+  }
+  result.tm_min = result_minutes;
+
+  int result_hours = time->tm_hour - hours;
+  if (result_hours < 0) {
+    result_hours = 12 - result_hours;
+  }
+  result.tm_hour = result_hours;
+
+  return result;
+}
+
+
+// Kludge to handle lack of non-padded hour format string
+// for twelve hour clock.
+void maybe_remove_leading_zero(char* time_text, size_t bufsize) {
+  if (!clock_is_24h_style() && (time_text[0] == '0')) {
+    memmove(time_text, &time_text[1], bufsize - 1);
+  }
+}
+
+
 void show_time(const PblTm* time) {
   // Need to be static because they're used by the system later.
   static char date_text[] = "Xxx, Xxx 00";
@@ -78,19 +107,14 @@ void show_time(const PblTm* time) {
 
   static char time_text[] = "00:00";
   string_format_time(time_text, sizeof(time_text), time_format, time);
-
-  // Kludge to handle lack of non-padded hour format string
-  // for twelve hour clock.
-  if (!clock_is_24h_style() && (time_text[0] == '0')) {
-    memmove(time_text, &time_text[1], sizeof(time_text) - 1);
-  }
-
+  maybe_remove_leading_zero(time_text, sizeof(time_text));
   text_layer_set_text(&text_time_layer, time_text);
 
   static char india_time_text[] = "IND  XX:XX XX";
-  PblTm india_time = add_time(time, 12, 30);
+  PblTm india_time = subtract_time(time, 4, 30);
   string_format_time(
       india_time_text, sizeof(india_time_text), "IND  %I:%M %p", &india_time);
+  maybe_remove_leading_zero(&(india_time_text[5]), sizeof(india_time_text));
   text_layer_set_text(&text_india_time_layer, india_time_text);
 }
 
