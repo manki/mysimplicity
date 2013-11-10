@@ -111,7 +111,14 @@ void init_text_layer(TextLayer* text_layer, uint32_t font_resource_id) {
 }
 
 
-void render_ui() {
+void init_ui() {
+  window = window_create();
+  window_layer = window_get_root_layer(window);
+
+  const bool animated = true;
+  window_stack_push(window, animated);
+  window_set_background_color(window, GColorBlack);
+
   text_date_layer = text_layer_create(GRect(8, 68, 144-8, 168-68));
   init_text_layer(text_date_layer, RESOURCE_ID_FONT_MONDA_21);
 
@@ -128,25 +135,13 @@ void render_ui() {
 }
 
 
-void init_window() {
-  window = window_create();
-  window_layer = window_get_root_layer(window);
-
-  const bool animated = true;
-  window_stack_push(window, animated);
-  window_set_background_color(window, GColorBlack);
-
-  render_ui();
-}
-
-
 void handle_minute_tick(struct tm* tick_time, TimeUnits units_changed) {
   show_time(tick_time);
 }
 
 
 void init() {
-  init_window();
+  init_ui();
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
   time_t t = time(NULL);
@@ -164,7 +159,7 @@ void deinit() {
 }
 
 
-int main(void) {
+int main() {
   init();
   app_event_loop();
   deinit();
