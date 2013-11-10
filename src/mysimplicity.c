@@ -16,7 +16,7 @@ Window window;
 
 TextLayer text_date_layer;
 TextLayer text_time_layer;
-TextLayer text_india_time_layer;
+TextLayer text_other_time_layer;
 
 Layer line_layer;
 
@@ -110,12 +110,12 @@ void show_time(const PblTm* time) {
   maybe_remove_leading_zero(time_text, sizeof(time_text));
   text_layer_set_text(&text_time_layer, time_text);
 
-  static char india_time_text[] = "IND  XX:XX XX";
-  PblTm india_time = subtract_time(time, 4, 30);
+  static char other_time_text[] = "XXX  XX:XX XX";
+  PblTm other_time = add_time(time, 5, 30);
   string_format_time(
-      india_time_text, sizeof(india_time_text), "IND  %I:%M %p", &india_time);
-  maybe_remove_leading_zero(&(india_time_text[5]), sizeof(india_time_text));
-  text_layer_set_text(&text_india_time_layer, india_time_text);
+      other_time_text, sizeof(other_time_text), "SYD  %I:%M %p", &other_time);
+  maybe_remove_leading_zero(&(other_time_text[5]), sizeof(other_time_text));
+  text_layer_set_text(&text_other_time_layer, other_time_text);
 }
 
 
@@ -128,7 +128,7 @@ void handle_init(AppContextRef ctx) {
 
   resource_init_current_app(&APP_RESOURCES);
 
-  init_text_layer(&text_date_layer, RESOURCE_ID_FONT_PT_SANS_21);
+  init_text_layer(&text_date_layer, RESOURCE_ID_FONT_MONDA_21);
   layer_set_frame(&text_date_layer.layer, GRect(8, 68, 144-8, 168-68));
   layer_add_child(&window.layer, &text_date_layer.layer);
 
@@ -136,9 +136,9 @@ void handle_init(AppContextRef ctx) {
   layer_set_frame(&text_time_layer.layer, GRect(7, 92, 144-7, 168-92));
   layer_add_child(&window.layer, &text_time_layer.layer);
 
-  init_text_layer(&text_india_time_layer, RESOURCE_ID_FONT_PT_SANS_BOLD_SUBSET_18);
-  layer_set_frame(&text_india_time_layer.layer, GRect(14, 10, 144-14, 25));
-  layer_add_child(&window.layer, &text_india_time_layer.layer);
+  init_text_layer(&text_other_time_layer, RESOURCE_ID_FONT_MONDA_BOLD_SUBSET_16);
+  layer_set_frame(&text_other_time_layer.layer, GRect(14, 10, 144-14, 25));
+  layer_add_child(&window.layer, &text_other_time_layer.layer);
 
   layer_init(&line_layer, window.layer.frame);
   line_layer.update_proc = &line_layer_update_callback;

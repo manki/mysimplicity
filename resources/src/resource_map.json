@@ -17,15 +17,15 @@
 
         {
         "type": "font",
-        "defName": "FONT_PT_SANS_21",
-        "file": "fonts/PT_Sans-Web-Regular.ttf"
+        "defName": "FONT_MONDA_21",
+        "file": "fonts/Monda-Regular.ttf"
         },
 
         {
           "type": "font",
-          "characterRegex": "[IND :0-9AMP]",
-          "defName": "FONT_PT_SANS_BOLD_SUBSET_18",
-          "file": "fonts/PT_Sans-Web-Bold.ttf"
+          "characterRegex": "[INDSYDMTV :0-9AMP]",
+          "defName": "FONT_MONDA_BOLD_SUBSET_16",
+          "file": "fonts/Monda-Bold.ttf"
         }
 
  ]
