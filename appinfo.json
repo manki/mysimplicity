@@ -1,0 +1,38 @@
+{
+  "uuid": "479b0c75-f4ea-4709-b3e3-f13089ea0af5",
+  "shortName": "mSimplicity",
+  "longName": "mSimplicity",
+  "companyName": "Manki",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {},
+  "resources": {
+    "media": [
+      {
+        "type": "png",
+        "name": "IMAGE_MENU_ICON",
+        "file": "images/menu_icon_simplicity.png"
+      },
+      {
+        "characterRegex": "[:0-9]",
+        "type": "font",
+        "name": "FONT_ROBOTO_BOLD_SUBSET_49",
+        "file": "fonts/Roboto-Bold.ttf"
+      },
+      {
+        "type": "font",
+        "name": "FONT_MONDA_21",
+        "file": "fonts/Monda-Regular.ttf"
+      },
+      {
+        "characterRegex": "[INDSYDMTV :0-9AMP]",
+        "type": "font",
+        "name": "FONT_MONDA_BOLD_SUBSET_16",
+        "file": "fonts/Monda-Bold.ttf"
+      }
+    ]
+  }
+}
