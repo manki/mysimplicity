@@ -8,6 +8,7 @@ static Window *window;
 static TextLayer *text_date_layer;
 static TextLayer *text_time_layer;
 static TextLayer *text_other_time_layer;
+static TextLayer *text_battery_layer;
 
 static Layer* window_layer;
 static Layer* line_layer;
@@ -127,9 +128,17 @@ void init_ui() {
   text_time_layer = text_layer_create(GRect(7, 92, 144-7, 168-92));
   init_text_layer(text_time_layer, RESOURCE_ID_FONT_ROBOTO_BOLD_SUBSET_49);
 
-  text_other_time_layer = text_layer_create(GRect(14, 10, 144-14, 25));
+  text_other_time_layer = text_layer_create(GRect(14, 25, 144-14, 25));
   init_text_layer(text_other_time_layer,
       RESOURCE_ID_FONT_MONDA_BOLD_SUBSET_16);
+
+  text_battery_layer = text_layer_create(GRect(0, 0, 144, 15));
+  text_layer_set_text_color(text_battery_layer, GColorWhite);
+  text_layer_set_background_color(text_battery_layer, GColorClear);
+  text_layer_set_text_alignment(text_battery_layer, GTextAlignmentRight);
+  text_layer_set_font(text_battery_layer,
+      fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  layer_add_child(window_layer, text_layer_get_layer(text_battery_layer));
 
   line_layer = layer_create(GRect(8, 97, 139, 2));
   layer_set_update_proc(line_layer, line_layer_update_callback);
@@ -137,8 +146,22 @@ void init_ui() {
 }
 
 
+void update_battery() {
+  uint8_t battery_level = battery_state_service_peek().charge_percent;
+  static char battery_status_text[5] = "100%";
+  snprintf(battery_status_text, sizeof(battery_status_text)-1,
+      "%u%%", battery_level);
+  text_layer_set_text(text_battery_layer, battery_status_text);
+}
+
+
 void handle_minute_tick(struct tm* tick_time, TimeUnits units_changed) {
-  show_time(tick_time);
+  if (units_changed | MINUTE_UNIT) {
+    show_time(tick_time);
+  }
+  if (units_changed | HOUR_UNIT) {
+    update_battery();
+  }
 }
 
 
@@ -149,6 +172,7 @@ void init() {
   time_t t = time(NULL);
   struct tm* now = localtime(&t);
   show_time(now);
+  update_battery();
 }
 
 
