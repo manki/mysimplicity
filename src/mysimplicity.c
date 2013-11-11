@@ -112,6 +112,8 @@ void init_text_layer(TextLayer* text_layer, uint32_t font_resource_id) {
 
 
 void init_ui() {
+  // NOTE: Pebble has a 144x168 screen.
+
   window = window_create();
   window_layer = window_get_root_layer(window);
 
