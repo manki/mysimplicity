@@ -91,10 +91,10 @@ void show_time(const struct tm* time) {
   maybe_remove_leading_zero(time_text, sizeof(time_text));
   text_layer_set_text(text_time_layer, time_text);
 
-  static char other_time_text[] = "XXX  XX:XX XX";
+  static char other_time_text[] = "XX:XX XX";
   struct tm other_time = subtract_time(time, 5, 30);
   strftime(
-      other_time_text, sizeof(other_time_text), "IND  %I:%M %p", &other_time);
+      other_time_text, sizeof(other_time_text), "%I:%M %p", &other_time);
   maybe_remove_leading_zero(&(other_time_text[5]), sizeof(other_time_text));
   text_layer_set_text(text_other_time_layer, other_time_text);
 }
@@ -128,16 +128,16 @@ void init_ui() {
   text_time_layer = text_layer_create(GRect(7, 92, 144-7, 168-92));
   init_text_layer(text_time_layer, RESOURCE_ID_FONT_ROBOTO_BOLD_SUBSET_49);
 
-  text_other_time_layer = text_layer_create(GRect(14, 25, 144-14, 25));
+  text_other_time_layer = text_layer_create(GRect(7, 3, 100, 20));
   init_text_layer(text_other_time_layer,
       RESOURCE_ID_FONT_MONDA_BOLD_SUBSET_16);
 
-  text_battery_layer = text_layer_create(GRect(0, 0, 144, 15));
+  text_battery_layer = text_layer_create(GRect(101, 3, 144-101-3, 20));
   text_layer_set_text_color(text_battery_layer, GColorWhite);
   text_layer_set_background_color(text_battery_layer, GColorClear);
   text_layer_set_text_alignment(text_battery_layer, GTextAlignmentRight);
   text_layer_set_font(text_battery_layer,
-      fonts_get_system_font(FONT_KEY_GOTHIC_14));
+      fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
   layer_add_child(window_layer, text_layer_get_layer(text_battery_layer));
 
   line_layer = layer_create(GRect(8, 97, 139, 2));
@@ -148,9 +148,14 @@ void init_ui() {
 
 void update_battery() {
   uint8_t battery_level = battery_state_service_peek().charge_percent;
-  static char battery_status_text[5] = "100%";
-  snprintf(battery_status_text, sizeof(battery_status_text)-1,
-      "%u%%", battery_level);
+  static char battery_status_text[11] = "";
+  int i;
+  for (i = 0; battery_level > 20; battery_level -= 20) {
+    battery_status_text[i++] = ':';
+    battery_status_text[i++] = ' ';
+  }
+  battery_status_text[i++] = (battery_level > 10) ? ':' : '.';
+
   text_layer_set_text(text_battery_layer, battery_status_text);
 }
 
