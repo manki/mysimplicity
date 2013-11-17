@@ -155,6 +155,7 @@ void update_battery() {
     battery_status_text[i++] = ' ';
   }
   battery_status_text[i++] = (battery_level > 10) ? ':' : '.';
+  battery_status_text[i++] = '\0';
 
   text_layer_set_text(text_battery_layer, battery_status_text);
 }
