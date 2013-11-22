@@ -165,7 +165,8 @@ void handle_minute_tick(struct tm* tick_time, TimeUnits units_changed) {
   if (units_changed & MINUTE_UNIT) {
     show_time(tick_time);
   }
-  if (units_changed & HOUR_UNIT) {
+  if ((units_changed & HOUR_UNIT)
+      || (battery_state_service_peek().is_charging)) {
     update_battery();
   }
 }
