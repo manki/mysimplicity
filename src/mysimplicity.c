@@ -92,7 +92,7 @@ void show_time(const struct tm* time) {
   text_layer_set_text(text_time_layer, time_text);
 
   static char other_time_text[] = "XX:XX XX";
-  struct tm other_time = subtract_time(time, 5, 30);
+  struct tm other_time = add_time(time, 13, 30);
   strftime(
       other_time_text, sizeof(other_time_text), "%I:%M %p", &other_time);
   maybe_remove_leading_zero(&(other_time_text[5]), sizeof(other_time_text));
