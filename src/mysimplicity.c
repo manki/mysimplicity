@@ -13,6 +13,10 @@ static TextLayer *text_battery_layer;
 static Layer* window_layer;
 static Layer* line_layer;
 
+static int time_zone_known = 0;
+static int utc_offset_hours = 0;
+static int utc_offset_mins = 0;
+
 
 void line_layer_update_callback(Layer *me, GContext* ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
@@ -91,8 +95,12 @@ void show_time(const struct tm* time) {
   maybe_remove_leading_zero(time_text, sizeof(time_text));
   text_layer_set_text(text_time_layer, time_text);
 
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Computing time.");
+  struct tm utc_time = add_time(time, utc_offset_hours, utc_offset_mins);
+  // India time: UTC + 5.30
+  struct tm other_time = add_time(&utc_time, 5, 30);
+
   static char other_time_text[] = "XX:XX XX";
-  struct tm other_time = add_time(time, 13, 30);
   strftime(
       other_time_text, sizeof(other_time_text), "%I:%M %p", &other_time);
   maybe_remove_leading_zero(&(other_time_text[5]), sizeof(other_time_text));
@@ -172,13 +180,39 @@ void handle_minute_tick(struct tm* tick_time, TimeUnits units_changed) {
 }
 
 
+void update_clock() {
+  time_t t = time(NULL);
+  struct tm* now = localtime(&t);
+  show_time(now);
+}
+
+
+void handle_incoming_message(DictionaryIterator* msg, void* context) {
+  static const int TIME_ZONE_OFFSET_MINUTES = 0;
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message");
+  Tuple* tuple = dict_find(msg, TIME_ZONE_OFFSET_MINUTES);
+  if (tuple && tuple->type == TUPLE_INT) {
+    int time_zone_offset_minutes = tuple->value->int32;
+    time_zone_known = 1;
+    utc_offset_mins = time_zone_offset_minutes % 60;
+    utc_offset_hours = time_zone_offset_minutes / 60;
+
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Offset: %d hours %d minutes",
+        utc_offset_hours, utc_offset_mins);
+    update_clock();
+  }
+}
+
+
 void init() {
   init_ui();
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
-  time_t t = time(NULL);
-  struct tm* now = localtime(&t);
-  show_time(now);
+  app_message_register_inbox_received(handle_incoming_message);
+  app_message_open(64, 64);
+
+  update_clock();
   update_battery();
 }
 
