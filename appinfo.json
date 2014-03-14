@@ -9,7 +9,8 @@
     "watchface": true
   },
   "appKeys": {
-    "timeZoneOffsetMinutes": 0
+    "timeZoneOffsetMinutes": 0,
+    "action": 1
   },
   "resources": {
     "media": [

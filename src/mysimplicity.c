@@ -13,9 +13,15 @@ static TextLayer *text_battery_layer;
 static Layer* window_layer;
 static Layer* line_layer;
 
-static int time_zone_known = 0;
 static int utc_offset_hours = 0;
 static int utc_offset_mins = 0;
+
+
+// App keys. Keep in sync with appKeys in appinfo.json.
+enum {
+  KEY_TIME_ZONE_OFFSET_MINUTES = 0,
+  KEY_ACTION = 1,
+};
 
 
 void line_layer_update_callback(Layer *me, GContext* ctx) {
@@ -95,7 +101,6 @@ void show_time(const struct tm* time) {
   maybe_remove_leading_zero(time_text, sizeof(time_text));
   text_layer_set_text(text_time_layer, time_text);
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Computing time.");
   struct tm utc_time = add_time(time, utc_offset_hours, utc_offset_mins);
   // India time: UTC + 5.30
   struct tm other_time = add_time(&utc_time, 5, 30);
@@ -169,9 +174,27 @@ void update_battery() {
 }
 
 
+void request_time_zone_offset() {
+  static const int ACTION_GET_TIME_ZONE_OFFSET = 0;
+
+  DictionaryIterator* request;
+  app_message_outbox_begin(&request);
+  Tuplet action = TupletInteger(KEY_ACTION, ACTION_GET_TIME_ZONE_OFFSET);
+  dict_write_tuplet(request, &action);
+  app_message_outbox_send();
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Message sent.");
+}
+
+
 void handle_minute_tick(struct tm* tick_time, TimeUnits units_changed) {
   if (units_changed & MINUTE_UNIT) {
     show_time(tick_time);
+
+    // Check time zone every 30 minutes. We want to know when daylight
+    // savings changes happen.
+    if (tick_time->tm_min / 30 == 0) {
+      request_time_zone_offset();
+    }
   }
   if ((units_changed & HOUR_UNIT)
       || (battery_state_service_peek().is_charging)) {
@@ -188,13 +211,10 @@ void update_clock() {
 
 
 void handle_incoming_message(DictionaryIterator* msg, void* context) {
-  static const int TIME_ZONE_OFFSET_MINUTES = 0;
-
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got message");
-  Tuple* tuple = dict_find(msg, TIME_ZONE_OFFSET_MINUTES);
+  Tuple* tuple = dict_find(msg, KEY_TIME_ZONE_OFFSET_MINUTES);
   if (tuple && tuple->type == TUPLE_INT) {
     int time_zone_offset_minutes = tuple->value->int32;
-    time_zone_known = 1;
     utc_offset_mins = time_zone_offset_minutes % 60;
     utc_offset_hours = time_zone_offset_minutes / 60;
 
@@ -205,13 +225,39 @@ void handle_incoming_message(DictionaryIterator* msg, void* context) {
 }
 
 
+void handle_outgoing_message_failure(DictionaryIterator* message, AppMessageResult reason, void* context) {
+  const char* reason_str = NULL;
+  switch (reason) {
+  case APP_MSG_SEND_TIMEOUT:
+    reason_str = "timeout";
+    break;
+  case APP_MSG_SEND_REJECTED:
+    reason_str = "message rejected";
+    break;
+  case APP_MSG_NOT_CONNECTED:
+    reason_str = "not connected";
+    break;
+  default:
+    reason_str = "unknown";
+    break;
+  }
+  APP_LOG(APP_LOG_LEVEL_ERROR,
+      "Message sending failed. Reason: %s", reason_str);
+}
+
+
 void init() {
   init_ui();
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
   app_message_register_inbox_received(handle_incoming_message);
+  app_message_register_outbox_failed(handle_outgoing_message_failure);
   app_message_open(64, 64);
 
+  request_time_zone_offset();
+  // We wouldn't have received time zone data from the phone yet.
+  // Display local time anyway; we can update remote time when we
+  // get time zone data from the phone.
   update_clock();
   update_battery();
 }

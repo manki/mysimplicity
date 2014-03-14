@@ -3,10 +3,10 @@
  * by the watch to do rudimentary time zone conversions.
  */
 function sendTimeZoneInfoToWatch() {
-  var message = {
+  var msg = {
     'timeZoneOffsetMinutes': new Date().getTimezoneOffset()
   };
-  Pebble.sendAppMessage(message,
+  Pebble.sendAppMessage(msg,
       function() {
         console.log('Message sent successfully.');
       },
@@ -15,4 +15,19 @@ function sendTimeZoneInfoToWatch() {
       });
 }
 
-Pebble.addEventListener('ready', sendTimeZoneInfoToWatch);
+// Actions.
+ACTION_GET_TIME_ZONE_OFFSET = 0;
+
+function receiveAppMessage(req) {
+  console.log('JS received message');
+  var msg = req.payload;
+  if (msg.action == ACTION_GET_TIME_ZONE_OFFSET) {
+    sendTimeZoneInfoToWatch();
+  }
+}
+
+Pebble.addEventListener('ready', function() {
+  Pebble.addEventListener('appmessage', receiveAppMessage);
+  // Send time zone info on ready so that watch face is initialised correctly.
+  sendTimeZoneInfoToWatch();
+});
